@@ -18,6 +18,17 @@ contract FayPool is ReceiverTemplate {
     bool active;
   }
 
+  /// @dev Tek onReport kapısından iki tür rapor geçer: abi.encode(uint8 kind, bytes payload)
+  uint8 public constant KIND_QUAKE = 1;
+  uint8 public constant KIND_GUARDIAN = 2;
+
+  /// @dev pool-guardian/main.ts ile BİREBİR aynı sıra.
+  struct GuardianReport {
+    uint64 observedAt; // CRE'nin okuma zamanı (unix s)
+    uint256 healthBps; // kasa / (aktif teminat × rezerv oranı), 1e4 = %100
+    bool pause; // true → satışları durdur, false → aç
+  }
+
   /// @dev quake-oracle/main.ts içindeki encodeAbiParameters sırasıyla BİREBİR aynı olmalı.
   struct QuakeReport {
     bytes32 eventId;
@@ -43,7 +54,9 @@ contract FayPool is ReceiverTemplate {
   uint64 public policyDuration = 365 days;
   uint32 public minMagX100 = 550; // M5.5
   uint8 public minSources = 2;
-  bool public salesPaused; // devre kesici (owner veya ileride CRE sağlık workflow'u)
+  bool public salesPaused; // devre kesici (CRE pool-guardian veya owner)
+  uint64 public lastGuardianAt; // bekçinin son raporu
+  uint256 public lastGuardianHealthBps;
 
   uint256 private constant KM_PER_DEG_E6 = 111_320; // 1° ≈ 111.32 km → metre/1e6 derece
 
@@ -53,6 +66,7 @@ contract FayPool is ReceiverTemplate {
   event QuakeProcessed(bytes32 indexed eventId, uint32 magX100, int32 latE6, int32 lonE6, uint256 policiesPaid, uint256 totalPaid);
   event PolicyPaid(uint256 indexed policyId, address indexed holder, bytes32 indexed eventId, uint256 amount, uint8 tier);
   event SalesPausedSet(bool paused);
+  event GuardianReported(uint64 observedAt, uint256 healthBps, bool paused);
 
   error SalesPaused();
   error InsufficientReserve(uint256 required, uint256 available);
@@ -116,7 +130,29 @@ contract FayPool is ReceiverTemplate {
 
   // ------------------------------------------------------------------ CRE raporu
   function _processReport(bytes calldata report) internal override {
-    QuakeReport memory q = abi.decode(report, (QuakeReport));
+    (uint8 kind, bytes memory payload) = abi.decode(report, (uint8, bytes));
+    if (kind == KIND_QUAKE) {
+      _processQuake(abi.decode(payload, (QuakeReport)));
+    } else if (kind == KIND_GUARDIAN) {
+      _processGuardian(abi.decode(payload, (GuardianReport)));
+    } else {
+      revert ReportRejected("unknown report kind");
+    }
+  }
+
+  /// @dev CRE pool-guardian: ödeme gücü düşükse satışları durdur, düzelince aç. Eski raporu yok say.
+  function _processGuardian(GuardianReport memory g) internal {
+    if (g.observedAt <= lastGuardianAt) revert ReportRejected("stale guardian report");
+    lastGuardianAt = g.observedAt;
+    lastGuardianHealthBps = g.healthBps;
+    if (salesPaused != g.pause) {
+      salesPaused = g.pause;
+      emit SalesPausedSet(g.pause);
+    }
+    emit GuardianReported(g.observedAt, g.healthBps, g.pause);
+  }
+
+  function _processQuake(QuakeReport memory q) internal {
 
     if (processedEvents[q.eventId]) revert EventAlreadyProcessed(q.eventId);
     if (q.sourcesAgreed < minSources) revert ReportRejected("insufficient sources");

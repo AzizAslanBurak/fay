@@ -1,0 +1,13 @@
+{
+  "schedule": "0 */10 * * * *",
+  "pauseBelowBps": 10000,
+  "resumeAboveBps": 12000,
+  "demoAction": "pause",
+  "evms": [
+    {
+      "chainName": "ethereum-testnet-sepolia",
+      "fayPoolAddress": "0x2ecd376ed2a1f71523a85aa7e37df0d9e8e901ca",
+      "gasLimit": "300000"
+    }
+  ]
+}

@@ -15,6 +15,8 @@ const _abiJson = '''
   {"type":"function","name":"reserveRatioBps","stateMutability":"view","inputs":[],"outputs":[{"name":"","type":"uint16"}]},
   {"type":"function","name":"premiumBps","stateMutability":"view","inputs":[],"outputs":[{"name":"","type":"uint16"}]},
   {"type":"function","name":"salesPaused","stateMutability":"view","inputs":[],"outputs":[{"name":"","type":"bool"}]},
+  {"type":"function","name":"lastGuardianAt","stateMutability":"view","inputs":[],"outputs":[{"name":"","type":"uint64"}]},
+  {"type":"function","name":"lastGuardianHealthBps","stateMutability":"view","inputs":[],"outputs":[{"name":"","type":"uint256"}]},
   {"type":"function","name":"quotePremium","stateMutability":"view","inputs":[{"name":"coverage","type":"uint256"}],"outputs":[{"name":"","type":"uint256"}]},
   {"type":"function","name":"policies","stateMutability":"view","inputs":[{"name":"","type":"uint256"}],"outputs":[
     {"name":"holder","type":"address"},{"name":"latE6","type":"int32"},{"name":"lonE6","type":"int32"},
@@ -42,6 +44,8 @@ class PoolStats {
   final BigInt balanceWei, activeCoverageWei, policyCount, activePolicies, reserveHealthBps;
   final int reserveRatioBps, premiumBps;
   final bool salesPaused;
+  final DateTime? lastGuardianAt;
+  final BigInt lastGuardianHealthBps;
   PoolStats({
     required this.balanceWei,
     required this.activeCoverageWei,
@@ -51,6 +55,8 @@ class PoolStats {
     required this.reserveRatioBps,
     required this.premiumBps,
     required this.salesPaused,
+    required this.lastGuardianAt,
+    required this.lastGuardianHealthBps,
   });
 }
 
@@ -102,7 +108,10 @@ class FayPool {
       _call('reserveRatioBps'),
       _call('premiumBps'),
       _call('salesPaused'),
+      _call('lastGuardianAt'),
+      _call('lastGuardianHealthBps'),
     ]);
+    final gAt = ((results[8] as List).first as BigInt).toInt();
     return PoolStats(
       balanceWei: (results[0] as EtherAmount).getInWei,
       activeCoverageWei: (results[1] as List).first as BigInt,
@@ -112,6 +121,8 @@ class FayPool {
       reserveRatioBps: ((results[5] as List).first as BigInt).toInt(),
       premiumBps: ((results[6] as List).first as BigInt).toInt(),
       salesPaused: (results[7] as List).first as bool,
+      lastGuardianAt: gAt == 0 ? null : DateTime.fromMillisecondsSinceEpoch(gAt * 1000),
+      lastGuardianHealthBps: (results[9] as List).first as BigInt,
     );
   }
 

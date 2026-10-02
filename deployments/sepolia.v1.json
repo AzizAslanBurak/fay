@@ -1,9 +1,7 @@
 {
   "network": "sepolia",
-  "fayPool": "0x2ecd376ed2a1f71523a85aa7e37df0d9e8e901ca",
+  "fayPool": "0x280983aa19c44cb3a925a1b1ad84b5eae8a48bee",
   "forwarder": "0x15fC6ae953E024d975e77382eEeC56A9101f9F88",
   "deployer": "0x1806f2aA56Fa9a67e21Af6241c350834712F6906",
-  "deployBlock": 11830567,
-  "version": 2,
-  "deployedAt": "2026-10-02T17:47:38.212Z"
+  "deployedAt": "2026-10-02T06:12:02.163Z"
 }

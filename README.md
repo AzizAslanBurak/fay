@@ -9,6 +9,7 @@ Tasarım: [`docs/DESIGN.md`](docs/DESIGN.md)
 
 ```
 fay/
+├── pool-guardian/         CRE workflow: havuz sağlığı → devre kesici (durdur/aç raporları)
 ├── quake-oracle/          CRE workflow (TypeScript)
 │   ├── main.ts            cron → 3 kaynak (node mode) → uzlaşı → rapor → FayPool
 │   ├── sources.ts         USGS / EMSC / AFAD istemcileri + olay birleştirme
@@ -17,7 +18,7 @@ fay/
 │   ├── config.demo.json      2023 Kahramanmaraş enjekte (video için)
 │   └── workflow.yaml
 ├── contracts/
-│   ├── FayPool.sol        poliçe, sermaye, CRE raporundan otomatik ödeme, devre kesici
+│   ├── FayPool.sol        poliçe, sermaye; tek onReport kapısından 2 tür CRE raporu: deprem→ödeme, bekçi→devre kesici
 │   ├── ReceiverTemplate.sol / IReceiver.sol / IERC165.sol   (Chainlink resmi şablon)
 │   └── abi/FayPool.ts
 ├── tests/logic.test.mjs   yarıçap + mesafe matematiği (TS ↔ Solidity uyumu)
@@ -31,6 +32,7 @@ fay/
 |---|---|
 | `quake-oracle/main.ts` | CRE Cron Trigger, HTTP Capability (node mode), `ConsensusAggregationByFields` (median/identical), EVM Read (`callContract`), EVM Write (`runtime.report` + `writeReport`) |
 | `quake-oracle/sources.ts` | CRE `HTTPSendRequester` |
+| `pool-guardian/main.ts` | CRE Cron Trigger, EVM Read (`callContract`), EVM Write (`runtime.report` + `writeReport`) |
 | `contracts/FayPool.sol` | CRE `ReceiverTemplate` (Keystone Forwarder doğrulamalı `onReport`) |
 
 ## Hızlı başlangıç
@@ -41,7 +43,11 @@ cre workflow simulate quake-oracle --target demo-settings      # 2023 olayı, zi
 cre workflow simulate quake-oracle --target staging-settings   # canlı veri
 ```
 
-## Sepolia'da uçtan uca (faz 1)
+## Sepolia dağıtımı
+
+FayPool v2: `0x2ecd376ed2a1f71523a85aa7e37df0d9e8e901ca` (MockKeystoneForwarder ile). Tek tık: `DEPLOY.command` → deploy + fonlama + poliçe + 3 zincir üstü demo (deprem ödemesi, bekçi durdur, bekçi aç).
+
+## Sepolia'da uçtan uca (elle)
 
 1. `contracts/FayPool.sol`'u Remix'te derle; constructor'a **MockKeystoneForwarder** (Sepolia) `0x15fC6ae953E024d975e77382eEeC56A9101f9F88` ver, deploy et.
 2. Havuzu fonla (`fund()` ile 0.05 ETH), bir poliçe al (`buyPolicy(37490000, 37300000, 1e16)` + prim).

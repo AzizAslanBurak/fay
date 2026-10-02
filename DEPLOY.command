@@ -23,9 +23,26 @@ elif [ $RC -ne 0 ]; then
 fi
 
 echo
-echo "==> Zincir üstü DEMO: 2023 Kahramanmaraş raporu FayPool'a yazılıyor (--broadcast)..."
+echo "==> Workflow bağımlılıkları..."
+( cd pool-guardian && bun install )
+
+echo
+echo "==> Zincir üstü DEMO 1/3: 2023 Kahramanmaraş raporu FayPool'a yazılıyor (--broadcast)..."
 cre workflow simulate quake-oracle --target demo-settings --broadcast --non-interactive --trigger-index 0
 
 echo
-echo "✅ Bitti. Yukarıda 'writeReport durumu: ... SUCCESS' ve bir tx hash görmelisin."
+echo "==> Zincir üstü DEMO 2/3: pool-guardian satışları DURDURUYOR (devre kesici)..."
+cre workflow simulate pool-guardian --target demo-settings --broadcast --non-interactive --trigger-index 0
+
+echo
+echo "==> Zincir üstü DEMO 3/3: pool-guardian satışları yeniden AÇIYOR..."
+sleep 5
+cre workflow simulate pool-guardian --target resume-settings --broadcast --non-interactive --trigger-index 0
+
+echo
+echo "==> Canlı bekçi kontrolü (müdahale gerekmemeli)..."
+cre workflow simulate pool-guardian --target staging-settings --non-interactive --trigger-index 0
+
+echo
+echo "✅ Bitti. Üç --broadcast adımında da 'writeReport durumu: 2' (SUCCESS) ve tx hash görmelisin."
 echo "   Etherscan'de FayPool adresindeki 'Events' sekmesinde PolicyPaid olayını görebilirsin."

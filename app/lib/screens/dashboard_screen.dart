@@ -94,6 +94,17 @@ class _PoolHealthCard extends StatelessWidget {
             _Stat(t('reserve_ratio'), healthPct, color: healthy ? Colors.green : Colors.red),
             _Stat(t('policies_count'), '${stats.activePolicies} / ${stats.policyCount}'),
           ]),
+          const SizedBox(height: 12),
+          Row(children: [
+            const Icon(Icons.security, size: 16, color: Colors.grey),
+            const SizedBox(width: 6),
+            Text(
+              stats.lastGuardianAt == null
+                  ? t('guardian_none')
+                  : '${t('guardian_last')}: ${stats.lastGuardianAt!.toLocal().toString().substring(0, 16)} · ${stats.lastGuardianHealthBps == BigInt.zero ? '—' : '${(stats.lastGuardianHealthBps.toInt() / 100).toStringAsFixed(0)}%'}',
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+          ]),
         ]),
       ),
     );

@@ -212,9 +212,12 @@ function writeQuakeReport(
     ]
   )
 
+  // FayPool v2: tek kapı, (uint8 kind, bytes payload). kind 1 = deprem raporu
+  const wrapped = encodeAbiParameters(parseAbiParameters("uint8 kind, bytes payload"), [1, payload])
+
   const report = runtime
     .report({
-      encodedPayload: hexToBase64(payload),
+      encodedPayload: hexToBase64(wrapped),
       encoderName: "evm",
       signingAlgo: "ecdsa",
       hashingAlgo: "keccak256",

@@ -1,0 +1,23 @@
+staging-settings:
+  user-workflow:
+    workflow-name: "pool-guardian"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.staging.json"
+    secrets-path: ""
+
+demo-settings:
+  user-workflow:
+    workflow-name: "pool-guardian"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.demo.json"
+    secrets-path: ""
+
+resume-settings:
+  user-workflow:
+    workflow-name: "pool-guardian"
+  workflow-artifacts:
+    workflow-path: "./main.ts"
+    config-path: "./config.resume.json"
+    secrets-path: ""

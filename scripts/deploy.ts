@@ -30,7 +30,7 @@ const ENV_PATH = resolve(ROOT, ".env")
 const RPC_URL = process.env.SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com"
 // CRE simülasyonu (--broadcast) MockKeystoneForwarder üzerinden yazar.
 const MOCK_FORWARDER_SEPOLIA = "0x15fC6ae953E024d975e77382eEeC56A9101f9F88"
-const FUND_ETH = "0.03"
+const FUND_ETH = "0.005"
 const COVERAGE_ETH = "0.01" // örnek poliçe teminatı; prim = %5 = 0.0005 ETH
 const PAZARCIK = { latE6: 37_490_000, lonE6: 37_300_000 }
 
@@ -82,12 +82,23 @@ function compileFayPool(): { abi: any; bytecode: Hex } {
 }
 
 // ---------------------------------------------------------------- Yardımcılar
-function setPoolAddressInConfigs(address: string) {
-  for (const f of ["config.demo.json", "config.staging.json", "config.production.json"]) {
-    const p = resolve(ROOT, "quake-oracle", f)
-    const cfg = JSON.parse(readFileSync(p, "utf8"))
-    cfg.evms[0].fayPoolAddress = address
-    writeFileSync(p, JSON.stringify(cfg, null, 2) + "\n")
+function setPoolAddressInConfigs(address: string, deployBlock?: bigint) {
+  for (const wf of ["quake-oracle", "pool-guardian"]) {
+    for (const f of ["config.demo.json", "config.staging.json", "config.production.json", "config.resume.json"]) {
+      const p = resolve(ROOT, wf, f)
+      if (!existsSync(p)) continue
+      const cfg = JSON.parse(readFileSync(p, "utf8"))
+      cfg.evms[0].fayPoolAddress = address
+      writeFileSync(p, JSON.stringify(cfg, null, 2) + "\n")
+    }
+  }
+  // Flutter uygulaması
+  const dart = resolve(ROOT, "app", "lib", "config.dart")
+  if (existsSync(dart)) {
+    let d = readFileSync(dart, "utf8")
+    d = d.replace(/fayPoolAddress = '0x[0-9a-fA-F]{40}'/, `fayPoolAddress = '${address}'`)
+    if (deployBlock) d = d.replace(/deployBlock = \d+/, `deployBlock = ${deployBlock}`)
+    writeFileSync(dart, d)
   }
 }
 
@@ -111,7 +122,7 @@ async function main() {
 
   // Daha önce deploy edildiyse sadece gas gerekir; değilse fonlama + gas.
   const alreadyDeployed = existsSync(resolve(ROOT, "deployments", "sepolia.json"))
-  const need = alreadyDeployed ? parseEther("0.005") : parseEther(FUND_ETH) + parseEther("0.015")
+  const need = alreadyDeployed ? parseEther("0.005") : parseEther(FUND_ETH) + parseEther("0.008")
   if (balance < need) {
     console.log(`\n⛽ Yetersiz bakiye. En az ${formatEther(need)} Sepolia ETH gerekiyor.`)
     console.log("   1) https://faucets.chain.link  → Ethereum Sepolia → yukarıdaki adresi yapıştır → Chainlink hesabınla iste")
@@ -123,6 +134,7 @@ async function main() {
   const depDir = resolve(ROOT, "deployments")
   const depFile = resolve(depDir, "sepolia.json")
   let poolAddress: Hex | undefined
+  let deployBlock: bigint | undefined
   if (existsSync(depFile)) {
     const d = JSON.parse(readFileSync(depFile, "utf8"))
     const code = await publicClient.getCode({ address: d.fayPool })
@@ -142,12 +154,13 @@ async function main() {
     const rcpt = await publicClient.waitForTransactionReceipt({ hash })
     if (!rcpt.contractAddress) throw new Error("Deploy başarısız")
     poolAddress = rcpt.contractAddress
+    deployBlock = rcpt.blockNumber
     console.log(`  FayPool: https://sepolia.etherscan.io/address/${poolAddress}`)
     mkdirSync(depDir, { recursive: true })
     writeFileSync(
       depFile,
       JSON.stringify(
-        { network: "sepolia", fayPool: poolAddress, forwarder: MOCK_FORWARDER_SEPOLIA, deployer: account.address, deployedAt: new Date().toISOString() },
+        { network: "sepolia", fayPool: poolAddress, forwarder: MOCK_FORWARDER_SEPOLIA, deployer: account.address, deployBlock: Number(deployBlock), version: 2, deployedAt: new Date().toISOString() },
         null,
         2
       ) + "\n"
@@ -176,7 +189,7 @@ async function main() {
   }
 
   // 5) Config'leri güncelle
-  setPoolAddressInConfigs(poolAddress)
+  setPoolAddressInConfigs(poolAddress, deployBlock)
   const active = await publicClient.readContract({ address: poolAddress, abi, functionName: "activePolicyCount" })
   const poolBal = await publicClient.getBalance({ address: poolAddress })
   console.log(`\n✅ Hazır. FayPool ${poolAddress} | aktif poliçe: ${active} | kasa: ${formatEther(poolBal)} ETH`)

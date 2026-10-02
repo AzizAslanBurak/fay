@@ -44,7 +44,7 @@ Hasar tespiti yok: bağımsız üç sismik kaynağın (USGS, EMSC, AFAD) **CRE �
 |---|---|---|
 | **CRE – HTTP + runInNodeMode + Consensus** | `quake-oracle/main.ts` | Tek kaynak manipüle edilebilir; üç kaynağın medyanı edilemez. Ürünün özü bu. |
 | **CRE – EVM Write (signed report)** | `writeReport` → `FayPool.onReport` | Ödeme kararını imzalı rapor taşır; sözleşme sadece Forwarder'dan gelen raporu kabul eder. |
-| **CRE – EVM Read** | poliçe sayısı / havuz sağlığı okuma | Havuz ödeme gücü düşükse yeni poliçe satışını durdurma (devre kesici). |
+| **CRE – EVM Read + Write (`pool-guardian`)** | `pool-guardian/main.ts` | Her 10 dk havuz sağlığını okur; <%100 → imzalı "durdur", ≥%120 → "aç" raporu. Devre kesiciyi insan değil DON yönetir. |
 | **Confidential Compute** (faz 2) | poliçe konumu | Konumu zincire açık yazmamak; sadece "tetiklendi" tasdiki. |
 | **ACE** (faz 2) | poliçe alımı | Uygunluk/KYC politikası. |
 | **CCIP** (faz 3) | havuz sermayesi | Birden fazla zincirden sermaye toplama. |
@@ -85,11 +85,12 @@ Her node üç kaynaktan bağımsız okur, bölge filtresi (Türkiye kutusu) ve e
 
 | Faz | Çıktı | Durum |
 |---|---|---|
-| 0 | Tasarım, CRE kurulumu, `quake-oracle` simülasyonda çalışıyor | **bu hafta** |
-| 1 | `FayPool.sol` Sepolia'da, `--broadcast` ile uçtan uca ödeme | |
-| 2 | Flutter uygulaması (poliçe al, durum, ödeme geçmişi) | |
-| 3 | Havuz sağlık workflow'u + devre kesici, Confidential Compute ile konum gizliliği | |
-| 4 | Video, README, repo cilası; (opsiyonel) ACE/CCIP | |
+| 0 | Tasarım, CRE kurulumu, `quake-oracle` simülasyonda çalışıyor | ✅ |
+| 1 | `FayPool.sol` Sepolia'da, `--broadcast` ile uçtan uca ödeme | ✅ tx `0x8e3fc7…` (v1), `0xbbb02c…` (v2) |
+| 2 | Flutter Web uygulaması (poliçe al, panel, poliçelerim, EN/TR) | ✅ |
+| 3a | `pool-guardian` workflow'u + devre kesici (FayPool v2, iki tür rapor) | ✅ tx `0xbfc2fd…` (pause), `0x471b45…` (resume) |
+| 3b | Confidential Compute ile konum gizliliği | |
+| 4 | Video, README (EN), Etherscan verify; (opsiyonel) ACE/CCIP | |
 
 ## 9. Riskler
 
