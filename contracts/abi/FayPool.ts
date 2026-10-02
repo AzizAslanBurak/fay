@@ -1,0 +1,70 @@
+// FayPool.sol'un workflow ve uygulama tarafından kullanılan kısmi ABI'si (viem `as const`).
+export const FayPoolAbi = [
+  {
+    inputs: [],
+    name: "activePolicyCount",
+    outputs: [{ internalType: "uint256", name: "n", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "reserveHealthBps",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "policyCount",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "salesPaused",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "coverage", type: "uint256" }],
+    name: "quotePremium",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "int32", name: "latE6", type: "int32" },
+      { internalType: "int32", name: "lonE6", type: "int32" },
+      { internalType: "uint128", name: "coverage", type: "uint128" },
+    ],
+    name: "buyPolicy",
+    outputs: [{ internalType: "uint256", name: "policyId", type: "uint256" }],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "fund",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    name: "policies",
+    outputs: [
+      { internalType: "address", name: "holder", type: "address" },
+      { internalType: "int32", name: "latE6", type: "int32" },
+      { internalType: "int32", name: "lonE6", type: "int32" },
+      { internalType: "uint128", name: "coverage", type: "uint128" },
+      { internalType: "uint64", name: "expiresAt", type: "uint64" },
+      { internalType: "bool", name: "active", type: "bool" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const

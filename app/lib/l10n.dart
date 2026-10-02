@@ -1,0 +1,106 @@
+import 'package:flutter/material.dart';
+
+/// Hafif çeviri katmanı (gen araçları olmadan). EN varsayılan, TR seçenekli.
+class L10n extends ChangeNotifier {
+  Locale _locale = const Locale('en');
+  Locale get locale => _locale;
+  bool get isTr => _locale.languageCode == 'tr';
+
+  void toggle() {
+    _locale = isTr ? const Locale('en') : const Locale('tr');
+    notifyListeners();
+  }
+
+  String t(String key) => (_strings[_locale.languageCode] ?? _strings['en']!)[key] ?? key;
+
+  static const Map<String, Map<String, String>> _strings = {
+    'en': {
+      'app_title': 'Fay',
+      'tagline': 'Parametric earthquake insurance. No claims, no adjusters — payouts in minutes.',
+      'connect': 'Connect wallet',
+      'connected': 'Connected',
+      'wrong_network': 'Switch to Sepolia',
+      'no_wallet': 'No wallet found. Install MetaMask to buy a policy.',
+      'nav_dashboard': 'Dashboard',
+      'nav_buy': 'Get covered',
+      'nav_policies': 'My policies',
+      'pool_health': 'Pool health',
+      'pool_balance': 'Capital',
+      'active_coverage': 'Active coverage',
+      'reserve_ratio': 'Reserve ratio',
+      'policies_count': 'Policies',
+      'sales_paused': 'Sales paused by circuit breaker',
+      'sales_open': 'Accepting policies',
+      'recent_events': 'Processed earthquakes',
+      'no_events': 'No qualifying earthquake has been processed yet.',
+      'payouts': 'Payouts',
+      'how_it_works': 'How it works',
+      'how_1': 'Pick your location and coverage. Pay a 5% premium.',
+      'how_2': 'Chainlink CRE nodes independently read USGS, EMSC and AFAD every 5 minutes and reach consensus.',
+      'how_3': 'If a quake ≥ M5.5 hits within the payout radius, the signed report triggers your payout automatically.',
+      'pick_location': 'Tap the map to set your insured location',
+      'presets': 'Quick picks',
+      'coverage': 'Coverage',
+      'premium': 'Premium',
+      'buy': 'Buy policy',
+      'buying': 'Confirm in your wallet…',
+      'bought': 'Policy purchased!',
+      'policy': 'Policy',
+      'active': 'Active',
+      'paid': 'Paid out',
+      'expired': 'Expired',
+      'no_policies': 'You have no policies yet.',
+      'tier_full': '100% payout',
+      'tier_half': '50% payout',
+      'magnitude': 'Magnitude',
+      'radius': 'Payout radius',
+      'view_tx': 'View on Etherscan',
+      'lang': 'TR',
+      'disclaimer': 'Prototype on Sepolia testnet. Not a licensed insurance product.',
+    },
+    'tr': {
+      'app_title': 'Fay',
+      'tagline': 'Parametrik deprem sigortası. Hasar tespiti yok, eksper yok; ödeme dakikalar içinde.',
+      'connect': 'Cüzdan bağla',
+      'connected': 'Bağlı',
+      'wrong_network': "Sepolia'ya geç",
+      'no_wallet': 'Cüzdan bulunamadı. Poliçe almak için MetaMask kur.',
+      'nav_dashboard': 'Panel',
+      'nav_buy': 'Teminat al',
+      'nav_policies': 'Poliçelerim',
+      'pool_health': 'Havuz sağlığı',
+      'pool_balance': 'Sermaye',
+      'active_coverage': 'Aktif teminat',
+      'reserve_ratio': 'Rezerv oranı',
+      'policies_count': 'Poliçe',
+      'sales_paused': 'Satışlar devre kesici tarafından durduruldu',
+      'sales_open': 'Poliçe satışı açık',
+      'recent_events': 'İşlenen depremler',
+      'no_events': 'Henüz eşiği geçen bir deprem işlenmedi.',
+      'payouts': 'Ödemeler',
+      'how_it_works': 'Nasıl çalışır',
+      'how_1': 'Konumunu ve teminatını seç. %5 prim öde.',
+      'how_2': "Chainlink CRE node'ları her 5 dakikada USGS, EMSC ve AFAD'ı bağımsız okur ve uzlaşır.",
+      'how_3': 'M5.5 ve üzeri bir deprem ödeme yarıçapına girerse imzalı rapor ödemeni otomatik tetikler.',
+      'pick_location': 'Sigortalanacak konumu haritada seç',
+      'presets': 'Hızlı seçim',
+      'coverage': 'Teminat',
+      'premium': 'Prim',
+      'buy': 'Poliçe al',
+      'buying': 'Cüzdanında onayla…',
+      'bought': 'Poliçe alındı!',
+      'policy': 'Poliçe',
+      'active': 'Aktif',
+      'paid': 'Ödendi',
+      'expired': 'Süresi doldu',
+      'no_policies': 'Henüz poliçen yok.',
+      'tier_full': '%100 ödeme',
+      'tier_half': '%50 ödeme',
+      'magnitude': 'Büyüklük',
+      'radius': 'Ödeme yarıçapı',
+      'view_tx': "Etherscan'de gör",
+      'lang': 'EN',
+      'disclaimer': 'Sepolia test ağında prototip. Lisanslı bir sigorta ürünü değildir.',
+    },
+  };
+}
