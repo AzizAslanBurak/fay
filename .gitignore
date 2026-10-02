@@ -1,6 +1,7 @@
 .env
 node_modules/
 **/node_modules/
+**/node_modules
 *.wasm
 bun.lock
 bun.lockb
@@ -9,6 +10,6 @@ app/.dart_tool/
 app/build/
 app/.flutter-plugins*
 app/web/
-quake-oracle/.cre_build_tmp.*
+**/.cre_build_tmp.*
 deployments/*.local.json
 *.log
