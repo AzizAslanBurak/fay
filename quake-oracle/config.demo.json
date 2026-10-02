@@ -20,7 +20,7 @@
   "evms": [
     {
       "chainName": "ethereum-testnet-sepolia",
-      "fayPoolAddress": "0x2ecd376ed2a1f71523a85aa7e37df0d9e8e901ca",
+      "fayPoolAddress": "0xdb12e1739c97a57c81e98af611c9d399485a378b",
       "gasLimit": "1500000"
     }
   ]

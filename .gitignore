@@ -13,3 +13,4 @@ app/web/
 **/.cre_build_tmp.*
 deployments/*.local.json
 *.log
+vault/policies.json

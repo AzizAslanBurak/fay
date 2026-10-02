@@ -3,9 +3,10 @@ class FayConfig {
   static const String rpcUrl = 'https://ethereum-sepolia-rpc.publicnode.com';
   static const int chainId = 11155111; // Sepolia
   static const String chainIdHex = '0xaa36a7';
-  static const String fayPoolAddress = '0x2ecd376ed2a1f71523a85aa7e37df0d9e8e901ca';
+  static const String fayPoolAddress = '0xdb12e1739c97a57c81e98af611c9d399485a378b';
   static const String explorer = 'https://sepolia.etherscan.io';
+  static const String vaultUrl = 'http://localhost:8787/policies';
 
   /// Olayları taramaya başlanacak blok (deploy bloğu civarı; tüm zinciri taramamak için).
-  static const int deployBlock = 11830567;
+  static const int deployBlock = 11830719;
 }

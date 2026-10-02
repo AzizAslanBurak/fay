@@ -21,6 +21,7 @@ import {
   type Hex,
 } from "viem"
 import { privateKeyToAccount, generatePrivateKey } from "viem/accounts"
+import { keccak256, encodeAbiParameters, parseAbiParameters, toHex } from "viem"
 import { sepolia } from "viem/chains"
 // @ts-ignore – solc-js'in tipi yok
 import solc from "solc"
@@ -30,8 +31,8 @@ const ENV_PATH = resolve(ROOT, ".env")
 const RPC_URL = process.env.SEPOLIA_RPC_URL || "https://ethereum-sepolia-rpc.publicnode.com"
 // CRE simülasyonu (--broadcast) MockKeystoneForwarder üzerinden yazar.
 const MOCK_FORWARDER_SEPOLIA = "0x15fC6ae953E024d975e77382eEeC56A9101f9F88"
-const FUND_ETH = "0.005"
-const COVERAGE_ETH = "0.01" // örnek poliçe teminatı; prim = %5 = 0.0005 ETH
+const FUND_ETH = "0.003"
+const COVERAGE_ETH = "0.002" // örnek poliçe teminatı; prim = %5 = 0.0005 ETH
 const PAZARCIK = { latE6: 37_490_000, lonE6: 37_300_000 }
 
 // ---------------------------------------------------------------- .env
@@ -83,7 +84,7 @@ function compileFayPool(): { abi: any; bytecode: Hex } {
 
 // ---------------------------------------------------------------- Yardımcılar
 function setPoolAddressInConfigs(address: string, deployBlock?: bigint) {
-  for (const wf of ["quake-oracle", "pool-guardian"]) {
+  for (const wf of ["quake-oracle", "pool-guardian", "claims-tee"]) {
     for (const f of ["config.demo.json", "config.staging.json", "config.production.json", "config.resume.json"]) {
       const p = resolve(ROOT, wf, f)
       if (!existsSync(p)) continue
@@ -122,7 +123,7 @@ async function main() {
 
   // Daha önce deploy edildiyse sadece gas gerekir; değilse fonlama + gas.
   const alreadyDeployed = existsSync(resolve(ROOT, "deployments", "sepolia.json"))
-  const need = alreadyDeployed ? parseEther("0.005") : parseEther(FUND_ETH) + parseEther("0.008")
+  const need = alreadyDeployed ? parseEther("0.005") : parseEther(FUND_ETH) + parseEther("0.006")
   if (balance < need) {
     console.log(`\n⛽ Yetersiz bakiye. En az ${formatEther(need)} Sepolia ETH gerekiyor.`)
     console.log("   1) https://faucets.chain.link  → Ethereum Sepolia → yukarıdaki adresi yapıştır → Chainlink hesabınla iste")
@@ -186,6 +187,22 @@ async function main() {
       value: premium,
     })
     await publicClient.waitForTransactionReceipt({ hash: h2 })
+
+    // Gizli demo poliçesi: Antakya (konum zincire gitmez; taahhüt + Policy Vault kaydı)
+    const ANTAKYA = { latE6: 36_200_000, lonE6: 36_160_000 }
+    const saltBytes = new Uint8Array(32)
+    crypto.getRandomValues(saltBytes)
+    const salt = toHex(saltBytes)
+    const commit = keccak256(encodeAbiParameters(parseAbiParameters("int32 latE6, int32 lonE6, bytes32 salt"), [ANTAKYA.latE6, ANTAKYA.lonE6, salt]))
+    console.log(`Gizli demo poliçesi alınıyor: Antakya (zincirde sadece taahhüt ${commit.slice(0, 10)}…)...`)
+    const h3 = await wallet.writeContract({ address: poolAddress, abi, functionName: "buyPolicyPrivate", args: [commit, coverage], value: premium })
+    await publicClient.waitForTransactionReceipt({ hash: h3 })
+    const pid = (await publicClient.readContract({ address: poolAddress, abi, functionName: "policyCount" })) as bigint
+    const vaultDb = resolve(ROOT, "vault", "policies.json")
+    const db = existsSync(vaultDb) ? JSON.parse(readFileSync(vaultDb, "utf8")) : {}
+    db[String(pid)] = { policyId: Number(pid), latE6: ANTAKYA.latE6, lonE6: ANTAKYA.lonE6, salt, commit, createdAt: new Date().toISOString() }
+    writeFileSync(vaultDb, JSON.stringify(db, null, 2) + "\n")
+    console.log(`  Policy Vault'a yazıldı: poliçe #${pid}`)
   }
 
   // 5) Config'leri güncelle

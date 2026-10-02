@@ -2,6 +2,7 @@
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:web3dart/crypto.dart' show keccak256;
 import 'package:web3dart/web3dart.dart';
 
 import '../config.dart';
@@ -20,7 +21,11 @@ const _abiJson = '''
   {"type":"function","name":"quotePremium","stateMutability":"view","inputs":[{"name":"coverage","type":"uint256"}],"outputs":[{"name":"","type":"uint256"}]},
   {"type":"function","name":"policies","stateMutability":"view","inputs":[{"name":"","type":"uint256"}],"outputs":[
     {"name":"holder","type":"address"},{"name":"latE6","type":"int32"},{"name":"lonE6","type":"int32"},
-    {"name":"coverage","type":"uint128"},{"name":"expiresAt","type":"uint64"},{"name":"active","type":"bool"}]},
+    {"name":"coverage","type":"uint128"},{"name":"expiresAt","type":"uint64"},{"name":"active","type":"bool"},
+    {"name":"isPrivate","type":"bool"},{"name":"locationCommit","type":"bytes32"}]},
+  {"type":"function","name":"buyPolicyPrivate","stateMutability":"payable","inputs":[
+    {"name":"locationCommit","type":"bytes32"},{"name":"coverage","type":"uint128"}],
+    "outputs":[{"name":"policyId","type":"uint256"}]},
   {"type":"function","name":"buyPolicy","stateMutability":"payable","inputs":[
     {"name":"latE6","type":"int32"},{"name":"lonE6","type":"int32"},{"name":"coverage","type":"uint128"}],
     "outputs":[{"name":"policyId","type":"uint256"}]},
@@ -67,7 +72,8 @@ class Policy {
   final BigInt coverageWei;
   final DateTime expiresAt;
   final bool active;
-  Policy(this.id, this.holder, this.lat, this.lon, this.coverageWei, this.expiresAt, this.active);
+  final bool isPrivate;
+  Policy(this.id, this.holder, this.lat, this.lon, this.coverageWei, this.expiresAt, this.active, this.isPrivate);
 }
 
 class QuakeEvent {
@@ -138,6 +144,7 @@ class FayPool {
       r[3] as BigInt,
       DateTime.fromMillisecondsSinceEpoch((r[4] as BigInt).toInt() * 1000),
       r[5] as bool,
+      r.length > 6 ? r[6] as bool : false,
     );
   }
 
@@ -156,6 +163,44 @@ class FayPool {
       coverageWei,
     ]);
     return '0x${_hex(data)}';
+  }
+
+  /// İşlem onaylanana kadar bekler, sonra policyCount döner (yeni poliçenin id'si).
+  Future<BigInt> policyCountAfter(String txHash) async {
+    for (var i = 0; i < 60; i++) {
+      final r = await _client.getTransactionReceipt(txHash);
+      if (r != null) break;
+      await Future.delayed(const Duration(seconds: 2));
+    }
+    return (await _call('policyCount')).first as BigInt;
+  }
+
+  /// Gizli poliçe: zincire sadece keccak256(abi.encode(int32 lat, int32 lon, bytes32 salt)) gider.
+  String buyPolicyPrivateCalldata({required Uint8List commit, required BigInt coverageWei}) {
+    final data = _c.function('buyPolicyPrivate').encodeCall([commit, coverageWei]);
+    return '0x${_hex(data)}';
+  }
+
+  static Uint8List locationCommit(double lat, double lon, Uint8List salt) {
+    final latE6 = BigInt.from((lat * 1e6).round());
+    final lonE6 = BigInt.from((lon * 1e6).round());
+    final buf = BytesBuilder();
+    buf.add(_int32Word(latE6));
+    buf.add(_int32Word(lonE6));
+    buf.add(salt);
+    return keccak256(buf.toBytes());
+  }
+
+  static Uint8List _int32Word(BigInt v) {
+    final two256 = BigInt.one << 256;
+    final u = v.isNegative ? v + two256 : v;
+    final bytes = Uint8List(32);
+    var x = u;
+    for (var i = 31; i >= 0; i--) {
+      bytes[i] = (x & BigInt.from(0xff)).toInt();
+      x = x >> 8;
+    }
+    return bytes;
   }
 
   Future<List<QuakeEvent>> quakeEvents() async {

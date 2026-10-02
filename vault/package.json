@@ -1,0 +1,11 @@
+{
+  "name": "fay-vault",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.0"
+  }
+}

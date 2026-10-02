@@ -1,13 +1,12 @@
 {
   "schedule": "0 */10 * * * *",
-  "pauseBelowBps": 10000,
-  "resumeAboveBps": 12000,
-  "demoAction": "resume",
+  "vaultUrl": "http://localhost:8787/policies",
+  "vaultSecretId": "VAULT_API_KEY",
   "evms": [
     {
       "chainName": "ethereum-testnet-sepolia",
       "fayPoolAddress": "0xdb12e1739c97a57c81e98af611c9d399485a378b",
-      "gasLimit": "300000"
+      "gasLimit": "1500000"
     }
   ]
 }

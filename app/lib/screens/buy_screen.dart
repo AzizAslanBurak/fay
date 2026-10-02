@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'dart:math';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:web/web.dart' as web;
@@ -26,6 +31,7 @@ class _BuyScreenState extends State<BuyScreen> {
   double _coverageEth = 0.01;
   BigInt? _premiumWei;
   bool _busy = false;
+  bool _private = true;
   String? _txHash;
   String? _error;
 
@@ -68,9 +74,30 @@ class _BuyScreenState extends State<BuyScreen> {
       _txHash = null;
     });
     try {
-      final data = scope.pool.buyPolicyCalldata(lat: _point.latitude, lon: _point.longitude, coverageWei: _coverageWei);
-      final hash = await w.sendTransaction(to: FayConfig.fayPoolAddress, dataHex: data, value: _premiumWei);
-      setState(() => _txHash = hash);
+      if (_private) {
+        final rnd = Random.secure();
+        final salt = Uint8List.fromList(List.generate(32, (_) => rnd.nextInt(256)));
+        final commit = FayPool.locationCommit(_point.latitude, _point.longitude, salt);
+        final data = scope.pool.buyPolicyPrivateCalldata(commit: commit, coverageWei: _coverageWei);
+        final hash = await w.sendTransaction(to: FayConfig.fayPoolAddress, dataHex: data, value: _premiumWei);
+        setState(() => _txHash = hash);
+        final nextId = (await scope.pool.policyCountAfter(hash)).toInt();
+        await http.post(
+          Uri.parse(FayConfig.vaultUrl),
+          headers: {'content-type': 'application/json'},
+          body: jsonEncode({
+            'policyId': nextId,
+            'latE6': (_point.latitude * 1e6).round(),
+            'lonE6': (_point.longitude * 1e6).round(),
+            'salt': '0x${salt.map((b) => b.toRadixString(16).padLeft(2, '0')).join()}',
+            'commit': '0x${commit.map((b) => b.toRadixString(16).padLeft(2, '0')).join()}',
+          }),
+        );
+      } else {
+        final data = scope.pool.buyPolicyCalldata(lat: _point.latitude, lon: _point.longitude, coverageWei: _coverageWei);
+        final hash = await w.sendTransaction(to: FayConfig.fayPoolAddress, dataHex: data, value: _premiumWei);
+        setState(() => _txHash = hash);
+      }
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -136,6 +163,15 @@ class _BuyScreenState extends State<BuyScreen> {
       ),
       Text('${t('premium')}: ${_premiumWei == null ? '…' : fmtEth(_premiumWei!)}',
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+      const SizedBox(height: 8),
+      SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        value: _private,
+        onChanged: (v) => setState(() => _private = v),
+        title: Text(t('private_policy')),
+        subtitle: Text(t('private_policy_hint'), style: const TextStyle(fontSize: 12)),
+        secondary: Icon(_private ? Icons.lock : Icons.lock_open),
+      ),
       const SizedBox(height: 20),
       FilledButton.icon(
         onPressed: _busy || _premiumWei == null ? null : _buy,

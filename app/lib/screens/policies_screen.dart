@@ -64,7 +64,7 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
                   ),
                   title: Text('${t('policy')} #${p.id} · ${fmtEth(p.coverageWei)}'),
                   subtitle: Text(
-                    '${p.lat.toStringAsFixed(3)}, ${p.lon.toStringAsFixed(3)} · '
+                    '${p.isPrivate ? '🔒 ${t('private_policy')}' : '${p.lat.toStringAsFixed(3)}, ${p.lon.toStringAsFixed(3)}'} · '
                     '${paidIds.containsKey(p.id) ? '${t('paid')} ${fmtEth(paidIds[p.id]!.amountWei)}' : p.active ? t('active') : p.expiresAt.isBefore(DateTime.now()) ? t('expired') : t('paid')}'
                     ' · ${p.expiresAt.toIso8601String().substring(0, 10)}',
                   ),

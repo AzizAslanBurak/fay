@@ -27,17 +27,26 @@ echo "==> Workflow bağımlılıkları..."
 ( cd pool-guardian && bun install )
 
 echo
-echo "==> Zincir üstü DEMO 1/3: 2023 Kahramanmaraş raporu FayPool'a yazılıyor (--broadcast)..."
+echo "==> Zincir üstü DEMO 1/4: 2023 Kahramanmaraş raporu FayPool'a yazılıyor (--broadcast)..."
 cre workflow simulate quake-oracle --target demo-settings --broadcast --non-interactive --trigger-index 0
 
 echo
-echo "==> Zincir üstü DEMO 2/3: pool-guardian satışları DURDURUYOR (devre kesici)..."
+echo "==> Zincir üstü DEMO 2/4: pool-guardian satışları DURDURUYOR (devre kesici)..."
 cre workflow simulate pool-guardian --target demo-settings --broadcast --non-interactive --trigger-index 0
 
 echo
-echo "==> Zincir üstü DEMO 3/3: pool-guardian satışları yeniden AÇIYOR..."
+echo "==> Zincir üstü DEMO 3/4: pool-guardian satışları yeniden AÇIYOR..."
 sleep 5
 cre workflow simulate pool-guardian --target resume-settings --broadcast --non-interactive --trigger-index 0
+
+echo
+echo "==> Policy Vault başlatılıyor (localhost:8787)..."
+( cd vault && bun install >/dev/null && cd .. && (VAULT_API_KEY_ALL=dev-vault-key bun run vault/server.ts > vault/vault.log 2>&1 &) )
+sleep 2; curl -s http://localhost:8787/health || echo "(vault cevap vermedi)"
+echo
+echo "==> Zincir üstü DEMO 4/4: claims-tee (ENCLAVE) gizli poliçeyi değerlendiriyor..."
+( cd claims-tee && bun install >/dev/null )
+cre workflow simulate claims-tee --target staging-settings --broadcast --non-interactive --trigger-index 0
 
 echo
 echo "==> Canlı bekçi kontrolü (müdahale gerekmemeli)..."
