@@ -13,6 +13,8 @@ git config user.email >/dev/null 2>&1 || git config user.email "azizaslanburak@g
 
 # Güvenlik: .env kesinlikle takip dışı olmalı
 if ! git check-ignore -q .env; then echo "❌ .env ignore edilmemiş, durduruldu."; exit 1; fi
+# Eski kalmış kilit dosyası (çalışan git yoksa) temizlenir
+if [ -f .git/index.lock ] && ! pgrep -x git >/dev/null; then rm -f .git/index.lock; fi
 git add -A
 git status --short | head -40
 git commit -qm "Fay: parametric earthquake insurance on Chainlink CRE (quake-oracle workflow, FayPool, Flutter web)" || echo "(değişiklik yok)"

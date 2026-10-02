@@ -90,7 +90,7 @@ Her node üç kaynaktan bağımsız okur, bölge filtresi (Türkiye kutusu) ve e
 | 2 | Flutter Web uygulaması (poliçe al, panel, poliçelerim, EN/TR) | ✅ |
 | 3a | `pool-guardian` workflow'u + devre kesici (FayPool v2, iki tür rapor) | ✅ tx `0xbfc2fd…` (pause), `0x471b45…` (resume) |
 | 3b | Gizli poliçe: zincirde sadece taahhüt; `claims-tee` (handlerInTee, AWS Nitro) + Policy Vault | ✅ tx `0x126246…` (FayPool v3) |
-| 4 | Video, README (EN), Etherscan verify; (opsiyonel) ACE/CCIP | |
+| 4 | Video senaryosu ✅ (`docs/DEMO_SCRIPT.md`), README (EN) ✅, kaynak doğrulama ✅ Etherscan + Sourcify exact match (`VERIFY.command`), video kaydı ⏳; (opsiyonel) ACE/CCIP | |
 
 ## 9. Riskler
 
