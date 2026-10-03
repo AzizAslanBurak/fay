@@ -5,6 +5,8 @@
 > not months. Private policies are settled inside a Confidential Workflow (TEE) so nobody, not even
 > node operators, learns where you live.
 
+**▶ Demo video (3 min): https://youtu.be/2jGryDLy5HA**
+
 [Türkçe README](docs/README.tr.md) · [Design doc](docs/DESIGN.md) · [Demo video script](docs/DEMO_SCRIPT.md)
 
 **Live on Sepolia:** FayPool v3 [`0xdb12e1739c97a57c81e98af611c9d399485a378b`](https://sepolia.etherscan.io/address/0xdb12e1739c97a57c81e98af611c9d399485a378b)
