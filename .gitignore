@@ -14,3 +14,11 @@ app/web/
 deployments/*.local.json
 *.log
 vault/policies.json
+
+# demo video (ham kayıtlar, anlatım, çıktı)
+docs/video/raw/
+docs/video/narration/*.mp3
+docs/video/music.mp3
+*.mp4
+*.mov
+docs/video/narration/download.sh

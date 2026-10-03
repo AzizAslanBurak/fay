@@ -50,6 +50,8 @@ rupture length, so large quakes pay along the fault), `R_half = 2·R_full`. M7.8
 | Guardian: reserve < 100 % → sales **paused** | [`0x6a7f288f…4f62`](https://sepolia.etherscan.io/tx/0x6a7f288ffb34d68612923cd8d7036f62abe1e441f9af62d0c204644196ef4f62) |
 | Guardian: reserve ≥ 120 % → sales **resumed** | [`0x15d3e8d3…055d`](https://sepolia.etherscan.io/tx/0x15d3e8d3c4d0321f42b05f92e80155015914dcd3b7d91be79d8d46d7cb2d055d) |
 | Confidential claims (TEE) → private policy #2 (Antakya) tier 1, location never revealed (paid 0.0012 ETH = the pool's remaining capital; `_pay` caps at balance) | [`0x1262467d…2587`](https://sepolia.etherscan.io/tx/0x1262467d6067c33c8e78cfdfe64418d37ab665ddc2b37c77fec7bc75be8b2587) |
+| 2023 Elbistan M7.5 report → public policy #3 (Kahramanmaraş) paid 100 % (0.002 ETH) | [`0xe174a52f11fbba27d45640de0eb17aacb11895b48059f9ca04dfba0ded2fb798`](https://sepolia.etherscan.io/tx/0xe174a52f11fbba27d45640de0eb17aacb11895b48059f9ca04dfba0ded2fb798) |
+| Confidential claims (TEE) for the M7.5 event → private policy #4 (Kahramanmaraş) tier 1, paid 0.002 ETH, location never revealed | [`0xb2af414a295d70207fb2bc2a8ea7a4486d98e81f0d6b23873368930f3b2e2e51`](https://sepolia.etherscan.io/tx/0xb2af414a295d70207fb2bc2a8ea7a4486d98e81f0d6b23873368930f3b2e2e51) |
 
 ## Repository layout
 
