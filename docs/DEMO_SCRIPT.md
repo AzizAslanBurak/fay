@@ -10,13 +10,15 @@ the simulator logs, the Sepolia transactions and the dApp.
    with ≥ 0.005 ETH, language set to EN.
 2. Three Terminal tabs ready, in `~/Projects/fay`:
    - **T1:** `cre workflow simulate quake-oracle --target staging-settings --non-interactive --trigger-index 0`
-   - **T2:** `cre workflow simulate quake-oracle --target demo-settings --non-interactive --trigger-index 0 --broadcast`
+   - **T2:** `cre workflow simulate quake-oracle --target demo2-settings --non-interactive --trigger-index 0 --broadcast`
+     (`demo2` = the second big quake of 6 Feb 2023, Elbistan M7.5 at 10:24 UTC. The Pazarcık M7.8 was already processed on this
+     contract and the replay guard would reject it; `demo-settings` is for a freshly deployed pool.)
    - **T3:** `cre workflow simulate claims-tee --target staging-settings --non-interactive --trigger-index 0`
    (Run T1 once beforehand so the output is already visible; T2 and T3 are typed but not yet executed.)
 3. Browser tabs: FayPool on Etherscan (`#code` after verification), the four demo transactions from the README.
-4. If the pool was drained by a previous demo, re-run `./DEPLOY.command` (or `./TOPUP.command` + `fund`) so the
-   payout actually lands on camera. Note the policy you will buy must be near Kahramanmaraş (use the "Hatay" or
-   "Kahramanmaraş" preset) so the injected 2023 event pays it.
+4. If the pool was drained by a previous demo, run `./FUND.command` (adds 0.03 ETH from the test wallet) so the
+   payout actually lands on camera; `./DEPLOY.command` only if you want a brand-new contract. Note the policy you will buy must use the **Kahramanmaraş** preset (53 km from the Elbistan epicentre → 100 %);
+   Hatay is 221 km away and would NOT be paid by the M7.5 event.
 
 ---
 
@@ -51,8 +53,8 @@ Turkey's AFAD, filters for magnitude 5.5 and above in the region, and picks the 
 CRE's consensus aggregation takes the median of magnitude, location and depth, and requires an
 *identical* event key across nodes — if the nodes disagree, no report is produced. A missing payout is
 safer than a wrong one.
-For the demo I inject the real 2023 M7.8 Pazarcık event. The workflow computes the payout radii —
-145 km full, 290 km half, following Wells & Coppersmith rupture length — signs the report, and
+For the demo I inject a real 2023 event — the M7.5 Elbistan quake of 6 February. The workflow computes the payout radii —
+about 97 km full, 193 km half, following Wells & Coppersmith rupture length — signs the report, and
 writes it on-chain through the Keystone Forwarder."
 
 **TR:** Her node üç kaynağı bağımsız okur; medyan + identical eventKey ile uzlaşı; uzlaşmazsa rapor yok.

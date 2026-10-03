@@ -1,0 +1,27 @@
+{
+  "schedule": "0 */5 * * * *",
+  "region": {
+    "minLat": 35.5,
+    "maxLat": 42.5,
+    "minLon": 25.5,
+    "maxLon": 45
+  },
+  "minMagnitude": 5.5,
+  "lookbackMinutes": 30,
+  "minSources": 2,
+  "demoEvent": {
+    "timeIso": "2023-02-06T10:24:49Z",
+    "lat": 38.011,
+    "lon": 37.196,
+    "depthKm": 7,
+    "mag": 7.5,
+    "place": "Elbistan, Kahramanmaraş"
+  },
+  "evms": [
+    {
+      "chainName": "ethereum-testnet-sepolia",
+      "fayPoolAddress": "0xdb12e1739c97a57c81e98af611c9d399485a378b",
+      "gasLimit": "1500000"
+    }
+  ]
+}

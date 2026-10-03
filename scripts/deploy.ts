@@ -85,7 +85,7 @@ function compileFayPool(): { abi: any; bytecode: Hex } {
 // ---------------------------------------------------------------- Yardımcılar
 function setPoolAddressInConfigs(address: string, deployBlock?: bigint) {
   for (const wf of ["quake-oracle", "pool-guardian", "claims-tee"]) {
-    for (const f of ["config.demo.json", "config.staging.json", "config.production.json", "config.resume.json"]) {
+    for (const f of ["config.demo.json", "config.demo2.json", "config.staging.json", "config.production.json", "config.resume.json"]) {
       const p = resolve(ROOT, wf, f)
       if (!existsSync(p)) continue
       const cfg = JSON.parse(readFileSync(p, "utf8"))
