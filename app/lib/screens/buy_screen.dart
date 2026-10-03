@@ -97,11 +97,13 @@ class _BuyScreenState extends State<BuyScreen> {
         final data = scope.pool.buyPolicyCalldata(lat: _point.latitude, lon: _point.longitude, coverageWei: _coverageWei);
         final hash = await w.sendTransaction(to: FayConfig.fayPoolAddress, dataHex: data, value: _premiumWei);
         setState(() => _txHash = hash);
+        await scope.pool.policyCountAfter(hash);
       }
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
       if (mounted) setState(() => _busy = false);
+      scope.pool.notifyChanged();
     }
   }
 

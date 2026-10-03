@@ -1,5 +1,8 @@
 // FayPool sözleşmesi: okuma (RPC) + işlem verisi üretme (MetaMask'a verilir) + olay tarama.
+import 'dart:math' as math;
 import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:web3dart/crypto.dart' show keccak256;
@@ -95,6 +98,18 @@ class Payout {
 }
 
 class FayPool {
+  /// Zincirde bir şey değiştiğinde (ör. poliçe alımı) ekranların yenilenmesi için sayaç.
+  final ValueNotifier<int> changed = ValueNotifier(0);
+  void notifyChanged() => changed.value++;
+
+  /// Ödeme yarıçapları (km) – quake-oracle/intensity.ts ile aynı formül.
+  static (double full, double half) payoutRadiiKm(double mag) {
+    final rPoint = 8 * math.pow(2, mag - 5).toDouble();
+    final rupture = math.pow(10, -2.44 + 0.59 * mag).toDouble();
+    final full = math.max(rPoint, rupture);
+    return (full, 2 * full);
+  }
+
   final Web3Client _client = Web3Client(FayConfig.rpcUrl, http.Client());
   late final DeployedContract _c = DeployedContract(
     ContractAbi.fromJson(_abiJson, 'FayPool'),
@@ -146,6 +161,12 @@ class FayPool {
       r[5] as bool,
       r.length > 6 ? r[6] as bool : false,
     );
+  }
+
+  /// Tüm poliçeler (harita için; gizli poliçelerin konumu zincirde yoktur).
+  Future<List<Policy>> allPolicies() async {
+    final n = ((await _call('policyCount')).first as BigInt).toInt();
+    return Future.wait([for (var i = 1; i <= n; i++) policy(i)]);
   }
 
   /// Bağlı adresin poliçeleri (MVP: tüm poliçeleri tarar; üretimde indeksleyici gerekir).

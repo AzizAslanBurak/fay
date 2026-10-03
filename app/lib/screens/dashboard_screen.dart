@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:web/web.dart' as web;
 
 import '../config.dart';
@@ -11,19 +13,37 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
+typedef _Data = (PoolStats, List<QuakeEvent>, List<Payout>, List<Policy>);
+
 class _DashboardScreenState extends State<DashboardScreen> {
-  Future<(PoolStats, List<QuakeEvent>, List<Payout>)>? _future;
+  Future<_Data>? _future;
+  FayPool? _pool;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final pool = AppScope.of(context).pool;
+    if (_pool != pool) {
+      _pool?.changed.removeListener(_reload);
+      _pool = pool..changed.addListener(_reload);
+    }
     _future ??= _load();
   }
 
-  Future<(PoolStats, List<QuakeEvent>, List<Payout>)> _load() async {
+  void _reload() {
+    if (mounted) setState(() => _future = _load());
+  }
+
+  @override
+  void dispose() {
+    _pool?.changed.removeListener(_reload);
+    super.dispose();
+  }
+
+  Future<_Data> _load() async {
     final pool = AppScope.of(context).pool;
-    final r = await Future.wait([pool.stats(), pool.quakeEvents(), pool.payouts()]);
-    return (r[0] as PoolStats, r[1] as List<QuakeEvent>, r[2] as List<Payout>);
+    final r = await Future.wait([pool.stats(), pool.quakeEvents(), pool.payouts(), pool.allPolicies()]);
+    return (r[0] as PoolStats, r[1] as List<QuakeEvent>, r[2] as List<Payout>, r[3] as List<Policy>);
   }
 
   @override
@@ -38,13 +58,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             return Center(child: Text('RPC error: ${snap.error}'));
           }
           if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-          final (stats, quakes, payouts) = snap.data!;
+          final (stats, quakes, payouts, policies) = snap.data!;
           return ListView(
             padding: const EdgeInsets.all(24),
             children: [
-              Text(t('tagline'), style: Theme.of(context).textTheme.titleLarge),
+              Row(children: [
+                Expanded(child: Text(t('tagline'), style: Theme.of(context).textTheme.titleLarge)),
+                IconButton(onPressed: _reload, icon: const Icon(Icons.refresh), tooltip: t('refresh')),
+              ]),
               const SizedBox(height: 20),
               _PoolHealthCard(stats: stats),
+              const SizedBox(height: 20),
+              _CoverageMap(quakes: quakes, payouts: payouts, policies: policies),
               const SizedBox(height: 20),
               _HowItWorks(),
               const SizedBox(height: 20),
@@ -187,6 +212,93 @@ class _PayoutTile extends StatelessWidget {
           icon: const Icon(Icons.open_in_new),
           onPressed: () => web.window.open('${FayConfig.explorer}/tx/${p.txHash}', '_blank'),
         ),
+      ),
+    );
+  }
+}
+
+class _CoverageMap extends StatelessWidget {
+  final List<QuakeEvent> quakes;
+  final List<Payout> payouts;
+  final List<Policy> policies;
+  const _CoverageMap({required this.quakes, required this.payouts, required this.policies});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppScope.of(context).l10n.t;
+    final paid = {for (final p in payouts) p.policyId};
+    final circles = <CircleMarker>[];
+    for (final q in quakes) {
+      final (full, half) = FayPool.payoutRadiiKm(q.mag);
+      circles.add(CircleMarker(
+        point: LatLng(q.lat, q.lon),
+        radius: half * 1000,
+        useRadiusInMeter: true,
+        color: Colors.orange.withOpacity(0.12),
+        borderColor: Colors.orange,
+        borderStrokeWidth: 1.5,
+      ));
+      circles.add(CircleMarker(
+        point: LatLng(q.lat, q.lon),
+        radius: full * 1000,
+        useRadiusInMeter: true,
+        color: Colors.red.withOpacity(0.18),
+        borderColor: Colors.red,
+        borderStrokeWidth: 1.5,
+      ));
+    }
+    final markers = <Marker>[
+      for (final p in policies.where((p) => !p.isPrivate))
+        Marker(
+          point: LatLng(p.lat, p.lon),
+          width: 32,
+          height: 32,
+          child: Tooltip(
+            message: '${t('policy')} #${p.id} · ${fmtEth(p.coverageWei)}',
+            child: Icon(
+              paid.contains(p.id) ? Icons.paid : Icons.shield,
+              color: paid.contains(p.id) ? Colors.green : (p.active ? Theme.of(context).colorScheme.primary : Colors.grey),
+              size: 26,
+            ),
+          ),
+        ),
+      for (final q in quakes)
+        Marker(
+          point: LatLng(q.lat, q.lon),
+          width: 36,
+          height: 36,
+          child: Tooltip(
+            message: 'M${q.mag.toStringAsFixed(1)} · ${fmtEth(q.totalPaidWei)}',
+            child: const Icon(Icons.flash_on, color: Colors.red, size: 30),
+          ),
+        ),
+    ];
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(t('map_title'), style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              height: 340,
+              child: FlutterMap(
+                options: const MapOptions(initialCenter: LatLng(38.6, 35.5), initialZoom: 5.2),
+                children: [
+                  TileLayer(
+                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'link.fay.app',
+                  ),
+                  CircleLayer(circles: circles),
+                  MarkerLayer(markers: markers),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(t('map_legend'), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        ]),
       ),
     );
   }

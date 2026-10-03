@@ -12,6 +12,28 @@ class PoliciesScreen extends StatefulWidget {
 class _PoliciesScreenState extends State<PoliciesScreen> {
   Future<(List<Policy>, List<Payout>)>? _future;
   String? _forAddress;
+  FayPool? _pool;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final pool = AppScope.of(context).pool;
+    if (_pool != pool) {
+      _pool?.changed.removeListener(_reload);
+      _pool = pool..changed.addListener(_reload);
+    }
+  }
+
+  void _reload() {
+    if (!mounted || _forAddress == null) return;
+    setState(() => _future = _load(_forAddress!));
+  }
+
+  @override
+  void dispose() {
+    _pool?.changed.removeListener(_reload);
+    super.dispose();
+  }
 
   Future<(List<Policy>, List<Payout>)> _load(String addr) async {
     final pool = AppScope.of(context).pool;
@@ -47,6 +69,10 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
         return ListView(
           padding: const EdgeInsets.all(24),
           children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(onPressed: _reload, icon: const Icon(Icons.refresh), label: Text(t('refresh'))),
+            ),
             for (final p in policies)
               Card(
                 child: ListTile(
